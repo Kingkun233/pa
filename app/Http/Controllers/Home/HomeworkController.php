@@ -26,6 +26,7 @@ class HomeworkController extends Controller
         $add_homework["assessment_ddl"] = $post["assessment_ddl"];
         $add_homework["modify_ddl"] = $post["modify_ddl"];
         $add_homework["round"] = 1;
+        //1:提交阶段；2：互评阶段；3：修改阶段；4：已结束
         $add_homework["state"] = 1;
         DB::beginTransaction();
         $flag = DB::table('homeworks')->insertGetId($add_homework);
@@ -203,5 +204,129 @@ class HomeworkController extends Controller
         }
         DB::commit();
         return response_treatment(0, $type);
+    }
+
+    /**修改作业
+     * @param Request $request
+     * @return mixed
+     */
+    public function modify_homework(Request $request)
+    {
+        $type = 'S3006';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        $update['modify'] = $post['modify'];
+        DB::table('student_homework')->where('id', $post['student_homework_id'])->update($update);
+        return response_treatment(0, $type);
+    }
+
+    /**
+     * 获取作业列表（按时间排序）
+     */
+    public function get_homework_list_by_time(Request $request)
+    {
+        $type = 'S3007';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        //获取学生班别
+        $student_id = session('id');
+        $class_ids2 = DB::table('student_course')->where('student_id', $student_id)->select('class_id')->get()->toArray();
+        //二维转一维
+        $class_ids = [];
+        foreach ($class_ids2 as $class_id) {
+            $class_ids[] = $class_id->class_id;
+        }
+        //根据班别获取作业
+        $homeworks = DB::table('homeworks')->whereIn('class_id', $class_ids)->orderBy('submit_ddl', 'desc')->get()->toArray();
+        //提交人数
+        foreach ($homeworks as $k => $homework) {
+            $submit_num = DB::table('student_homework')->where('homework_id', $homework->id)->count();
+            $homeworks[$k]->submit_num = $submit_num;
+            //我的状态
+            if ($homework->state == 1) {
+                //如果是提交,查找student_homework表有没有该学生的作业
+                $flag = DB::table('student_homework')
+                    ->where(['student_id' => $student_id, 'homework_id' => $homework->id])
+                    ->get()
+                    ->toArray();
+                if ($flag) {
+                    $homeworks[$k]->student_homework_state = 1;
+                } else {
+                    $homeworks[$k]->student_homework_state = 0;
+                }
+            } elseif ($homework->state == 2) {
+                //如果是互评,查找assessment有没有该学生的评价
+                $flag = DB::table('assessment')
+                    ->leftJoin('student_homework', 'assessment.student_homework_id', '=', 'student_homework.id')
+                    ->where(['assessment.student_id' => $student_id, 'student_homework.homework_id' => $homework->id])
+                    ->get()
+                    ->toArray();
+                if ($flag) {
+                    $homeworks[$k]->student_homework_state = 1;
+                } else {
+                    $homeworks[$k]->student_homework_state = 0;
+                }
+            } elseif ($homework->state == 3) {
+                //如果是修改,查找student_homework表中该学生的modify字段是否为空
+                $flag = DB::table('student_homework')
+                    ->where(['student_id' => $student_id, 'homework_id' => $homework->id])
+                    ->value('modify')
+                    ->toArray();
+                if ($flag) {
+                    $homeworks[$k]->student_homework_state = 1;
+                } else {
+                    $homeworks[$k]->student_homework_state = 0;
+                }
+            } else {
+                //如果为完成,状态为完成
+                $homeworks[$k]->student_homework_state = 1;
+            }
+        }
+        return response_treatment(0, $type, $homeworks);
+    }
+
+    /**通过id获取作业详情
+     * @param Request $request
+     */
+    public function get_homework_info_by_id(Request $request)
+    {
+        $type = 'S3008';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        //homeworks
+        $homework_info = DB::table('homeworks')->where('id', $post['homework_id'])->first();
+        if ($homework_info) {
+            return response_treatment(0, $type, $homework_info);
+        } else {
+            return response_treatment(1, $type);
+        }
+    }
+
+    /**
+     * 获取该作业的同伴评价
+     */
+    public function get_assessment(Request $request){
+        $type = 'S3009';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        //assessments
+        $assessments=DB::table('assessment')->where('student_homework_id',$post['student_homework_id'])->get()->toArray();
+        return response_treatment(0,$type,$assessments);
+    }
+
+    /**获取该作业的修改
+     * @param Request $request
+     */
+    public function get_modify(Request $request){
+        $type = 'S3010';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        //student_homework
+        $modify=DB::table('student_homework')->where('id',$post['student_homework_id'])->select('modify')->first();
+        if($modify->modify){
+            return response_treatment(0,$type,$modify);
+        }else{
+            return response_treatment(1,$type);
+        }
     }
 }

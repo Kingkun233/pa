@@ -34,7 +34,8 @@ class UserController extends Controller
             ->where('name', $post['name'])
             ->orWhere('email', $post['name'])
             ->orWhere('school_num', $post['school_num'])
-            ->get();
+            ->get()->toArray();
+//        var_dump($users);die;
         if ($users) {
             return response_treatment(3, $type);
         }

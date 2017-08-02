@@ -9,8 +9,11 @@ use \Illuminate\Support\Facades\DB;
  * @param array $msg
  * @return mixed
  */
-function response_treatment($re = 0, $type = '', $msg = [])
+function response_treatment($re = 0, $type = '', $msg = null)
 {
+    if(!$msg){
+        $msg=new stdClass ;
+    }
     $res['re'] = $re;
     $res['type'] = $type;
     $res['msg'] = $msg;

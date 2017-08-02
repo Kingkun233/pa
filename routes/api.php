@@ -27,12 +27,22 @@ Route::group(['middleware' => ['api']], function () {
         Route::post('/login', ['uses' => 'Home\UserController@student_login']);
         //课程模块
         Route::post('/join_course', ['uses' => 'Home\CourseController@join_course']);
+        Route::post('/get_joined_course_list', ['uses' => 'Home\CourseController@get_joined_course_list']);
+        Route::post('/get_course_info_by_id', ['uses' => 'Home\CourseController@get_course_info_by_id']);
+        Route::post('/get_class_by_course', ['uses' => 'Home\CourseController@get_class_by_course']);
+        Route::post('/get_all_joinable_course', ['uses' => 'Home\CourseController@get_all_joinable_course']);
         //作业模块
         Route::post('/submit_homework', ['uses' => 'Home\HomeworkController@submit_homework']);
         Route::post('/get_four_homework', ['uses' => 'Home\HomeworkController@get_four_homework']);
         Route::post('/get_homework_standard', ['uses' => 'Home\HomeworkController@get_homework_standard']);
         Route::post('/assess_other', ['uses' => 'Home\HomeworkController@assess_other']);
         Route::post('/assess_myself', ['uses' => 'Home\HomeworkController@assess_myself']);
+        Route::post('/modify_homework', ['uses' => 'Home\HomeworkController@modify_homework']);
+        Route::post('/get_homework_list_by_time', ['uses' => 'Home\HomeworkController@get_homework_list_by_time']);
+        Route::post('/get_homework_info_by_id', ['uses' => 'Home\HomeworkController@get_homework_info_by_id']);
+        Route::post('/get_assessment', ['uses' => 'Home\HomeworkController@get_assessment']);
+        Route::post('/get_modify', ['uses' => 'Home\HomeworkController@get_modify']);
+
     });
     //teacher接口
     Route::group(['prefix' => 'teacher'], function () {
