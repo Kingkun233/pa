@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Home;
+namespace App\Http\Controllers\Student;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -8,43 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class HomeworkController extends Controller
 {
-    /**创建作业
-     * @param Request $request
-     * @return mixed
-     */
-    public function add_homework(Request $request)
-    {
-        $type = 'T3001';
-        $post = $request->all();
-        login_pretreat($type, $post, 2);
-        $add_homework["course_id"] = $post["course_id"];
-        $add_homework["class_id"] = $post["class_id"];
-        $add_homework["requirement"] = $post["requirement"];
-        $add_homework["name"] = $post["name"];
-        $add_homework["extend_from"] = 0;
-        $add_homework["submit_ddl"] = $post["submit_ddl"];
-        $add_homework["assessment_ddl"] = $post["assessment_ddl"];
-        $add_homework["modify_ddl"] = $post["modify_ddl"];
-        $add_homework["round"] = 1;
-        //1:提交阶段；2：互评阶段；3：修改阶段；4：已结束
-        $add_homework["state"] = 1;
-        DB::beginTransaction();
-        $flag = DB::table('homeworks')->insertGetId($add_homework);
-        if ($flag) {
-            //插入作业标准表
-            foreach ($post['standard'] as $standard) {
-                DB::table('homework_standard')->insert(['homework_id' => $flag, 'standard' => $standard]);
-            }
-            //更新作业源为它自己
-            $update_homework["extend_from"] = $flag;
-            DB::table('homeworks')->where('id', $flag)->update($update_homework);
-            DB::commit();
-            return response_treatment(0, $type);
-        } else {
-            DB::rollback();
-            return response_treatment(1, $type);
-        }
-    }
 
     /**提交作业
      * @param Request $request
@@ -71,7 +34,7 @@ class HomeworkController extends Controller
     /**获取四份作业
      * @param Request $request
      */
-    public function get_four_homework(Request $request)
+    public function get_four_homework1(Request $request)
     {
         $type = 'S3002';
         $post = $request->all();
@@ -172,7 +135,7 @@ class HomeworkController extends Controller
             $add_assess['standard_id'] = $assess['standard_id'];
             $add_assess['stars'] = $assess['stars'];
             $flag = DB::table('assessment')->insert($add_assess);
-            DB::table('student_homework')->where('id', $post['student_homework_id'])->update(['assessing' => 0]);
+//            DB::table('student_homework')->where('id', $post['student_homework_id'])->update(['assessing' => 0]);
             if (!$flag) {
                 DB::rollback();
                 return response_treatment(1, $type);
@@ -337,19 +300,6 @@ class HomeworkController extends Controller
             }
         }
         //整理结构，按标准分类
-//        $standard_id_list=[];
-//        foreach($assessments as $k=>$as){
-//            $standard_id_list[]=$as->standard_id;
-//        }
-//        $standard_id_list=array_unique($standard_id_list);
-//        $assessment_pro=[];
-//        foreach ($assessments as $as){
-//            foreach ($standard_id_list as $k=>$item){
-//                if($as->standard_id==$item){
-//                    $assessment_pro[$k]=$as;
-//                }
-//            }
-//        }
         return response_treatment(0, $type, $assessments);
     }
 
@@ -370,35 +320,6 @@ class HomeworkController extends Controller
         }
     }
 
-    /**发布新一轮作业
-     * @param Request $request
-     */
-    public function add_new_round_homework(Request $request)
-    {
-        $type = 'T3002';
-        $post = $request->all();
-        login_pretreat($type, $post, 2);
-        $add_homework["course_id"] = $post["course_id"];
-        $add_homework["class_id"] = $post["class_id"];
-        $add_homework["requirement"] = $post["requirement"];
-        $add_homework["name"] = $post["name"];
-        $add_homework["extend_from"] = $post["extend_from"];
-        $add_homework["submit_ddl"] = $post["submit_ddl"];
-        $add_homework["assessment_ddl"] = $post["assessment_ddl"];
-        $add_homework["modify_ddl"] = $post["modify_ddl"];
-        $add_homework["round"] = 2;
-        //1:提交阶段；2：互评阶段；3：修改阶段；4：已结束
-        $add_homework["state"] = 1;
-        DB::beginTransaction();
-        $flag = DB::table('homeworks')->insertGetId($add_homework);
-        if ($flag) {
-            DB::commit();
-            return response_treatment(0, $type);
-        } else {
-            DB::rollback();
-            return response_treatment(1, $type);
-        }
-    }
 
     /**获取作业轮数
      * @param $homework_id
@@ -410,13 +331,6 @@ class HomeworkController extends Controller
         return $round;
     }
 
-    /**
-     * 获取该作业的班级情况和个人情况的比较
-     */
-    public function get_compare_result()
-    {
-        //获取班级
-    }
 
     /**获取作业原始轮作业id
      * @param $homework_id
@@ -427,8 +341,199 @@ class HomeworkController extends Controller
         return $extend_from;
     }
 
-    public function assign(){}
+    /**
+     * 评价分配表
+     */
+    public function assess_assign(Request $request)
+    {
+        $post = $request->all();
+        $homework_id = $post['homework_id'];
+        //获取该作业对应的班级的所有的学生id
+        $class_id = DB::table('homeworks')->where('id', $homework_id)->value('class_id');
+        $students = DB::table('student_course')->where('class_id', $class_id)->get()->toArray();
+        $student_ids = [];
+        foreach ($students as $student) {
+            $student_ids[] = $student->student_id;
+        }
+        //学生id打乱
+        shuffle($student_ids);
+        //存进数据库,homework_id,学生id
 
+        foreach ($student_ids as $student_id) {
+            $insert['homework_id'] = $homework_id;
+            $insert['student_id'] = $student_id;
+            $assign = DB::table('assess_assign')->where($insert)->get()->toArray();
+            if (!$assign) {
+                DB::table('assess_assign')->insert($insert);
+            }
+        }
+    }
 
+    /**随机获取四分作业
+     * @param Request $request
+     */
+    public function get_four_homework(Request $request)
+    {
+        $type = 'S3002';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        $homework_id = $post['homework_id'];
+        $student_id = session('id');
+        //在assess_assign表中找到该学生和该作业的分配记录id，然后获取身后四个
+//        $where_assess['student_id'] = $student_id;
+        $where_assess['homework_id'] = $homework_id;
+        $assigns = DB::table('assess_assign')->where($where_assess)->get()->toArray();
+        $index = 0;
+        foreach ($assigns as $k => $assign) {
+            if ($assign->student_id == $student_id) {
+                $index = $k;
+                break;
+            }
+        }
+        //判断$index之后有没有四个
+        $student_ids = [];
+        $num = count($assigns);
+        $remain = $num - 1 - $index;
+        if ($remain < 4) {
+            $tail = array_slice($assigns, $index + 1, $remain);
+            $head = array_slice($assigns, 0, 4 - $remain);
+            $slice = array_merge($tail, $head);
+        } else {
+            $slice = array_slice($assigns, $index + 1, $remain);
+        }
+        foreach ($slice as $s) {
+            $student_ids[] = $s->student_id;
+        }
+        //遍历$student_ids在student_homework中找学生作业
+        $student_homeworks = DB::table('student_homework')
+            ->whereIn('student_id', $student_ids)
+            ->where('homework_id', $homework_id)
+            ->get()
+            ->toArray();
+        if($student_homeworks){
+            //assess_assign表assigned字段置一
+            DB::table('assess_assign')
+                ->whereIn('student_id', $student_ids)
+                ->where('homework_id', $homework_id)
+                ->update(['assigned'=>1]);
+            return response_treatment(0,$type,$student_homeworks);
+        }else{
+            return response_treatment(1,$type);
+        }
+    }
 
+    /**
+     * 获取班级作业情况
+     */
+    public function get_homework_class_result(Request $request){
+        $type = 'S3012';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        $homework_id=$post['homework_id'];
+        $round_id=$this->get_round_and_homework_id($homework_id);
+        $class_result=[];
+        foreach ($round_id as $round=>$homework_id){
+            $student_homeworks=DB::table('student_homework')->where('homework_id',$homework_id)->get()->toArray();
+            $student_homework_ids=$this->get_object_value_as_array($student_homeworks,'id');
+            //获取这个作业的标准id
+            $standard_ids=$this->get_standards($homework_id);
+            //通过标准id和学生作业id获取星数
+            $class_star_avg=[];
+            foreach ($standard_ids as $k=>$standard_id){
+                $assessments=DB::table('assessment')->whereIn('student_homework_id',$student_homework_ids)->where('standard_id',$standard_id)->get()->toArray();
+                $stars=$this->get_object_value_as_array($assessments,'stars');
+                $class_star_avg[$k]['standard_id']=$standard_id;
+                $class_star_avg[$k]['standard_name']=DB::table('homework_standard')->where('id',$standard_id)->value('standard');
+                $class_star_avg[$k]['avg_star']=round(((float)array_sum($stars))/(float)count($stars),2);
+            }
+            //统计班级平均分
+            $assessmens=DB::table('assessment')->where('student_homework_id',$student_homework_ids)->get()->toArray();
+            $scores=$this->get_object_value_as_array($assessmens,'total_score');
+            $avg_score=round(((float)array_sum($scores))/(float)count($scores),2);
+            $class_round_result['avg_score']=$avg_score;
+            $class_round_result['avg_star']=$class_star_avg;
+            $class_result[$round]=$class_round_result;
+        }
+        return response_treatment(0,$type,$class_result);
+    }
+
+    /**
+     * 获取个人作业情况
+     */
+    public function get_homework_personal_result(Request $request){
+        $type = 'S3013';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        $student_id=session('id');
+        $homework_id=$post['homework_id'];
+        $round_id=$this->get_round_and_homework_id($homework_id);
+        $class_result=[];
+        foreach ($round_id as $round=>$homework_id){
+            $student_homeworks=DB::table('student_homework')->where('homework_id',$homework_id)->where('student_id',$student_id)->get()->toArray();
+            $student_homework_ids=$this->get_object_value_as_array($student_homeworks,'id');
+            //获取这个作业的标准id
+            $standard_ids=$this->get_standards($homework_id);
+            //通过标准id和学生作业id获取星数
+            $personal_star_avg=[];
+            foreach ($standard_ids as $k=>$standard_id){
+                $assessments=DB::table('assessment')->whereIn('student_homework_id',$student_homework_ids)->where('standard_id',$standard_id)->get()->toArray();
+                $stars=$this->get_object_value_as_array($assessments,'stars');
+                $personal_star_avg[$k]['standard_id']=$standard_id;
+                $personal_star_avg[$k]['standard_name']=DB::table('homework_standard')->where('id',$standard_id)->value('standard');
+                $personal_star_avg[$k]['avg_star']=round(((float)array_sum($stars))/(float)count($stars),2);
+                $personal_star_avg[$k]['assessments']=$this->get_object_value_as_array($assessments,'content');
+            }
+            //统计个人平均分
+            $assessmens=DB::table('assessment')->where('student_homework_id',$student_homework_ids)->get()->toArray();
+            $scores=$this->get_object_value_as_array($assessmens,'total_score');
+            $avg_score=round(((float)array_sum($scores))/(float)count($scores),2);
+            $personal_round_result['avg_score']=$avg_score;
+            $personal_round_result['avg_star']=$personal_star_avg;
+            $personal_result[$round]=$personal_round_result;
+        }
+        return $personal_result;
+    }
+
+    /**以数组形式返回对象数组的某个值
+     * @param $objects
+     * @param $value_name
+     * @return array
+     */
+    private function get_object_value_as_array($objects,$value_name){
+        $value_list=[];
+        foreach ($objects as $object){
+            $value_list[]=$object->$value_name;
+        }
+        return $value_list;
+    }
+
+    /**获取作业标准id并且以数组返回
+     * @param $homework_id
+     * @return array
+     */
+    private function get_standards($homework_id){
+        //判断该作业是否原始轮
+        $round=$this->get_homework_round($homework_id);
+        //不是的话获取原始轮作业id
+        if($round!=1){
+            $homework_id=$this->get_original_homework_id($homework_id);
+        }
+        //根据作业id获取标准id数组
+        $standards=DB::table('homework_standard')->where('homework_id',$homework_id)->get()->toArray();
+        return $this->get_object_value_as_array($standards,'id');
+    }
+
+    /**获取作业的轮次和作业id
+     * @param $homework_id
+     * @return array
+     */
+    private function get_round_and_homework_id($homework_id){
+        $origin_homework_id=DB::table('homeworks')->where('id',$homework_id)->value('extend_from');
+        $round_id=DB::table('homeworks')->where('extend_from',$origin_homework_id)->get()->toArray();
+        $round_id_list=[];
+        foreach ($round_id as $k=>$v){
+            $round_id_list[$v->round]=$v->id;
+        }
+        return $round_id_list;
+    }
 }
