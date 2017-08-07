@@ -53,7 +53,7 @@ class CourseController extends Controller
     {
         $type = 'S2003';
         $post = $request->all();
-        tourist_pretreat($type, $post);
+        login_pretreat($type, $post);
         //course表中找
         $course_info = DB::table('courses')->where('id', $post['course_id'])->first();
         //整合老师姓名
