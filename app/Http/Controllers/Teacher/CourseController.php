@@ -16,7 +16,7 @@ class CourseController extends Controller
     {
         $type = 'T2001';
         $post = $request->all();
-        login_pretreat($type, $post, 2);
+        login_pretreat($type, $post);
         $add_course['name'] = $post['name'];
         $add_course['grade'] = $post['grade'];
         $add_course['description'] = $post['description'];
@@ -50,7 +50,7 @@ class CourseController extends Controller
     {
         $type = 'T2002';
         $post = $request->all();
-        login_pretreat($type, $post, 2);
+        login_pretreat($type, $post);
         $teacher_id = session('id');
         //course
         $courses = DB::table('courses')->where('teacher_id', $teacher_id)->get()->toArray();

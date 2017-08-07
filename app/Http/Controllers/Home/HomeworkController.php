@@ -410,13 +410,6 @@ class HomeworkController extends Controller
         return $round;
     }
 
-    /**
-     * 获取该作业的班级情况和个人情况的比较
-     */
-    public function get_compare_result()
-    {
-        //获取班级
-    }
 
     /**获取作业原始轮作业id
      * @param $homework_id
@@ -426,9 +419,6 @@ class HomeworkController extends Controller
         $extend_from = DB::table('homeworks')->where('id', $homework_id)->value('extend_from');
         return $extend_from;
     }
-
-    public function assign(){}
-
 
 
 }

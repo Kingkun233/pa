@@ -35,18 +35,22 @@ function tourist_pretreat($type, $post)
 /**登录接口预处理
  * @param $type
  * @param $post
- * @param int $role 1是学生，2是老师
+ * @param int $role 0是学生,1是老师,2是管理员
  */
-function login_pretreat($type, $post, $role = 1)
+function login_pretreat($type, $post)
 {
     if ($type != $post['type']) {
         my_redirect('return', 2, $type);
     }
     //判断token是否存在
     $token = $post['token'];
-    if ($role == 1) {
-        $user_info = DB::table('students')->where('token', $token)->select(['id', 'token'])->first();
-    } else if ($role == 2) {
+//    if ($role == 1) {
+//        $user_info = DB::table('students')->where('token', $token)->select(['id', 'token'])->first();
+//    } else if ($role == 2) {
+//        $user_info = DB::table('teachers')->where('token', $token)->select(['id', 'token'])->first();
+//    }
+    $user_info = DB::table('students')->where('token', $token)->select(['id', 'token'])->first();
+    if(!$user_info){
         $user_info = DB::table('teachers')->where('token', $token)->select(['id', 'token'])->first();
     }
     if ($user_info) {

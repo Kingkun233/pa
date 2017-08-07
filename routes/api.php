@@ -60,6 +60,7 @@ Route::group(['middleware' => ['api']], function () {
         //作业模块
         Route::post('/add_homework', ['uses' => 'Teacher\HomeworkController@add_homework']);
         Route::post('/add_new_round_homework', ['uses' => 'Teacher\HomeworkController@add_new_round_homework']);
+        Route::post('/get_homework_of_course', ['uses' => 'Teacher\HomeworkController@get_homework_of_course']);
 
     });
 });
