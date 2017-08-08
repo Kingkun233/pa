@@ -44,7 +44,6 @@ Route::group(['middleware' => ['api']], function () {
         Route::post('/get_modify', ['uses' => 'Student\HomeworkController@get_modify']);
         Route::post('/get_homework_class_result', ['uses' => 'Student\HomeworkController@get_homework_class_result']);
         Route::post('/get_homework_personal_result', ['uses' => 'Student\HomeworkController@get_homework_personal_result']);
-
         //定时器
         Route::any('/assess_assign', ['uses' => 'Student\HomeworkController@assess_assign']);
     });
@@ -61,7 +60,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::post('/add_homework', ['uses' => 'Teacher\HomeworkController@add_homework']);
         Route::post('/add_new_round_homework', ['uses' => 'Teacher\HomeworkController@add_new_round_homework']);
         Route::post('/get_homework_of_course', ['uses' => 'Teacher\HomeworkController@get_homework_of_course']);
-
+        Route::post('/get_homework_score_percent', ['uses' => 'Teacher\HomeworkController@get_homework_score_percent']);
     });
 });
 
