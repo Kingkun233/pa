@@ -27,8 +27,10 @@ class UserController extends Controller
         $add_user['sex'] = $post['sex'];
         $add_user['email'] = $post['email'];
         $add_user['school_num'] = $post['school_num'];
-        $add_user['grade'] = $post['school_num'];
-        $add_user['class_name'] = $post['class_name'];
+        $add_user['grade'] = '';
+        $add_user['class_name'] = '';
+        $add_user['school_id'] = $post['school_id'];
+        $add_user['college_id'] = $post['college_id'];
         //检查数据库中是否存在该用户名,email,学号
         $users = DB::table('students')
             ->where('name', $post['name'])

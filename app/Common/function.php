@@ -11,8 +11,8 @@ use \Illuminate\Support\Facades\DB;
  */
 function response_treatment($re = 0, $type = '', $msg = null)
 {
-    if(!$msg){
-        $msg=new stdClass ;
+    if ($msg === null) {
+        $msg = new stdClass;
     }
     $res['re'] = $re;
     $res['type'] = $type;
@@ -44,14 +44,12 @@ function login_pretreat($type, $post)
     }
     //判断token是否存在
     $token = $post['token'];
-//    if ($role == 1) {
-//        $user_info = DB::table('students')->where('token', $token)->select(['id', 'token'])->first();
-//    } else if ($role == 2) {
-//        $user_info = DB::table('teachers')->where('token', $token)->select(['id', 'token'])->first();
-//    }
     $user_info = DB::table('students')->where('token', $token)->select(['id', 'token'])->first();
-    if(!$user_info){
+    if (!$user_info) {
         $user_info = DB::table('teachers')->where('token', $token)->select(['id', 'token'])->first();
+        if (!$user_info) {
+            $user_info = DB::table('admins')->where('token', $token)->select(['id', 'token'])->first();
+        }
     }
     if ($user_info) {
         //如果存在，获取用户id并存进session
@@ -73,4 +71,18 @@ function my_redirect($route_name, $re, $type)
 {
     header("Location:" . URL::route($route_name) . "?re=" . $re . "&type=" . $type);
     exit();
+}
+
+/**以数组形式返回对象数组的某个值
+ * @param $objects
+ * @param $value_name
+ * @return array
+ */
+function get_object_value_as_array($objects, $value_name)
+{
+    $value_list = [];
+    foreach ($objects as $object) {
+        $value_list[] = $object->$value_name;
+    }
+    return $value_list;
 }

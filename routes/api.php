@@ -45,7 +45,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::post('/get_homework_class_result', ['uses' => 'Student\HomeworkController@get_homework_class_result']);
         Route::post('/get_homework_personal_result', ['uses' => 'Student\HomeworkController@get_homework_personal_result']);
         //定时器
-        Route::any('/assess_assign', ['uses' => 'Student\HomeworkController@assess_assign']);
+        Route::any('/crontab_change_homework_state', ['uses' => 'Student\HomeworkController@crontab_change_homework_state']);
     });
     //teacher接口
     Route::group(['prefix' => 'teacher'], function () {
@@ -61,6 +61,17 @@ Route::group(['middleware' => ['api']], function () {
         Route::post('/add_new_round_homework', ['uses' => 'Teacher\HomeworkController@add_new_round_homework']);
         Route::post('/get_homework_of_course', ['uses' => 'Teacher\HomeworkController@get_homework_of_course']);
         Route::post('/get_homework_score_percent', ['uses' => 'Teacher\HomeworkController@get_homework_score_percent']);
+    });
+    //admin接口
+    Route::group(['prefix' => 'admin'], function () {
+        //用户模块
+        Route::post('/add_admin', ['uses' => 'Admin\UserController@add_admin']);
+        Route::post('/login', ['uses' => 'Admin\UserController@login']);
+        Route::post('/get_student_list', ['uses' => 'Admin\UserController@get_student_list']);
+        Route::post('/get_college_school', ['uses' => 'Admin\UserController@get_college_school']);
+        Route::post('/get_teacher_list', ['uses' => 'Admin\UserController@get_teacher_list']);
+        //课程模块
+        Route::post('/get_course_list', ['uses' => 'Admin\CourseController@get_course_list']);
     });
 });
 
