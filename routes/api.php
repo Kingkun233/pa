@@ -70,6 +70,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::post('/get_student_list', ['uses' => 'Admin\UserController@get_student_list']);
         Route::post('/get_college_school', ['uses' => 'Admin\UserController@get_college_school']);
         Route::post('/get_teacher_list', ['uses' => 'Admin\UserController@get_teacher_list']);
+        Route::post('/get_admin_list', ['uses' => 'Admin\UserController@get_admin_list']);
         //课程模块
         Route::post('/get_course_list', ['uses' => 'Admin\CourseController@get_course_list']);
     });

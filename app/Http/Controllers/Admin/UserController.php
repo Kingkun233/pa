@@ -186,4 +186,24 @@ class UserController extends Controller
         }
         return response_treatment(0, $type, $teachers);
     }
+
+    /**
+     * 获取管理员列表
+     */
+    public function get_admin_list(Request $request){
+        $type = 'A1006';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        $is_super = $this->is_superadmin(session('id'));
+        if (!$is_super) {
+            return response_treatment(6, $type);
+        }
+        $admins = DB::table('admins')->get()->toArray();
+        foreach ($admins as $admin) {
+            //整合学院名字和学校名字
+            unset($admin->password);
+            unset($admin->token);
+        }
+        return response_treatment(0, $type, $admins);
+    }
 }
