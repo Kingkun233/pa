@@ -100,10 +100,27 @@ class HomeworkController extends Controller
                 $homework->avg_score = 0;
             }
             //整合提交人数
-            $submit_num = DB::table('student_homework')->where('homework_id', $homework->id)->group()->count();
+            $submit_num = DB::table('student_homework')->where('homework_id', $homework->id)->count();
             $homework->submit_num = $submit_num;
         }
-        return response_treatment(0, $type, $homeworks);
+        //按班级整合
+        $homework_group_by_class = [];
+        $class_ids = array_unique(get_object_value_as_array($homeworks, 'class_id'));
+        foreach ($class_ids as $class_id) {
+            $homework_group_by_class[] = ['class_id' => $class_id];
+        }
+
+        foreach ($homeworks as $homework) {
+            $key=0;
+            foreach ($homework_group_by_class as $k=>$v){
+                if($v['class_id']==$homework->class_id){
+                    $key=$k;
+                }
+            }
+            $homework_group_by_class[$key]['class_name'] = DB::table('classes')->where('id', $homework->class_id)->value('class_name');
+            $homework_group_by_class[$key]['homeworks'][] = $homework;
+        }
+        return response_treatment(0, $type, $homework_group_by_class);
     }
 
     /**
@@ -145,8 +162,9 @@ class HomeworkController extends Controller
                 $msg['_100']++;
             }
         }
-        return response_treatment(0,$type,$msg);
+        return response_treatment(0, $type, $msg);
     }
+
 
     /**获取作业轮数
      * @param $homework_id

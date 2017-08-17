@@ -55,6 +55,7 @@ Route::group(['middleware' => ['api']], function () {
         //课程模块
         Route::post('/add_course', ['uses' => 'Teacher\CourseController@add_course']);
         Route::post('/get_my_course', ['uses' => 'Teacher\CourseController@get_my_course']);
+        Route::post('/get_student_by_course', ['uses' => 'Teacher\CourseController@get_student_by_course']);
 
         //作业模块
         Route::post('/add_homework', ['uses' => 'Teacher\HomeworkController@add_homework']);

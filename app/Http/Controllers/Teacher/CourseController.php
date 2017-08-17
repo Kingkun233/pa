@@ -61,4 +61,50 @@ class CourseController extends Controller
         }
     }
 
+
+    /**获取该课程的学生
+     * @param Request $request
+     */
+    public function get_student_by_course(Request $request)
+    {
+        $type = 'T2003';
+        $post = $request->all();
+        login_pretreat($type, $post);
+        $course_id = $post['course_id'];
+        $students = DB::table('student_course')->where('course_id', $course_id)->get()->toArray();
+        foreach ($students as $student) {
+            //整合学生信息
+            $student_info = DB::table('students')->where('id', $student->student_id)->first();
+            $student->name = $student_info->name;
+            $student->school_num = $student_info->school_num;
+        }
+        $student_group_by_class = [];
+        $class_ids = array_unique(get_object_value_as_array($students, 'class_id'));
+        foreach ($class_ids as $class_id) {
+            $student_group_by_class[] = ['class_id' => $class_id];
+        }
+        foreach ($students as $student) {
+            $key=0;
+            foreach ($student_group_by_class as $k=>$v){
+                if($v['class_id']==$student->class_id){
+                    $key=$k;
+                }
+            }
+            $student_group_by_class[$key]['class_name'] = DB::table('classes')->where('id', $student->class_id)->value('class_name');
+            $student_group_by_class[$key]['students'][] = $student;
+        }
+        return response_treatment(0, $type, $student_group_by_class);
+    }
+
+    /**将对象数组按照每个属性分类返回二维对象数组
+     * @param $array_one_degree
+     * @param $key
+     */
+    private function group($objs, $attr)
+    {
+        $return_array = [];
+        foreach ($objs as $obj) {
+            $return_array[$obj->$attr][] = $obj;
+        }
+    }
 }
